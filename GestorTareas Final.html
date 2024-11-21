@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tópicos de Tecnologías - Gestor de Tareas</title>
+    <!-- Enlaces a Google Fonts y Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* Estilos globales */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        /* Contenedor principal */
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        /* Formularios y botones */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 1rem;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 8px;
+            outline: none;
+            margin-top: 5px;
+        }
+
+        .input-group label {
+            font-size: 1rem;
+            color: #ffffff;
+            opacity: 0.8;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffffff;
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(255, 138, 0, 0.5);
+        }
+
+        /* Lista de tareas */
+        .task-list {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .task {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .task:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .task h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #ff8a00;
+        }
+
+        .task p {
+            margin-bottom: 10px;
+        }
+
+        .task .status {
+            font-weight: bold;
+            color: #21d07a;
+        }
+
+        .task .status.pendiente {
+            color: #ff4b5c;
+        }
+
+        .task .complete-btn {
+            background: #21d07a;
+            color: #ffffff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .task .complete-btn:hover {
+            background: #1bbf6b;
+        }
+
+        /* Ajustes de diseño */
+        .logo {
+            font-size: 2rem;
+            color: #ff8a00;
+            margin-bottom: 10px;
+        }
+
+        /* Responsividad */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 30px 20px;
+            }
+
+            .task h3 {
+                font-size: 1rem;
+            }
+
+            .task p {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo"><i class="fas fa-rocket"></i></div>
+        <h1>Tópicos de Tecnologías</h1>
+        <h2>Gestor de Tareas</h2>
+
+        <!-- Formulario para crear una nueva tarea -->
+        <div class="input-group">
+            <label for="titulo">Título de la Tarea</label>
+            <input type="text" id="titulo" placeholder="Ingresa el título de la tarea" />
+        </div>
+        <div class="input-group">
+            <label for="descripcion">Descripción</label>
+            <textarea id="descripcion" placeholder="Ingresa una descripción"></textarea>
+        </div>
+        <button class="btn" onclick="crearTarea()">Crear Tarea</button>
+
+        <!-- Botón para obtener la lista de tareas -->
+        <button class="btn" onclick="obtenerTareas()">Obtener Tareas</button>
+
+        <!-- Lista de tareas -->
+        <div class="task-list" id="taskList"></div>
+    </div>
+
+    <!-- Conexión a Web3.js -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <script>
+        let web3;
+        let contract;
+        const contractAddress = "0x16515a1582f7ca200c512A1E0b3EeD8Ee40FAe7a"; // Direccion del contrato desplegado
+        const contractABI = [
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_id",
+				"type": "uint256"
+			}
+		],
+		"name": "completarTarea",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_titulo",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_descripcion",
+				"type": "string"
+			}
+		],
+		"name": "crearTarea",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "completada",
+				"type": "bool"
+			}
+		],
+		"name": "TareaCompletada",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "titulo",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "descripcion",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "completada",
+				"type": "bool"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "creador",
+				"type": "address"
+			}
+		],
+		"name": "TareaCreada",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "contadorTareas",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_id",
+				"type": "uint256"
+			}
+		],
+		"name": "obtenerTarea",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			},
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "tareas",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "id",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "titulo",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "descripcion",
+				"type": "string"
+			},
+			{
+				"internalType": "bool",
+				"name": "completada",
+				"type": "bool"
+			},
+			{
+				"internalType": "address",
+				"name": "creador",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+
+        // conectar a MetaMask
+        window.addEventListener('load', async () => {
+            if (typeof window.ethereum !== 'undefined') {
+                web3 = new Web3(window.ethereum);
+                try {
+                    // Solicitar al usuario que autorice la aplicacion
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    contract = new web3.eth.Contract(contractABI, contractAddress);
+                    obtenerTareas(); // Obtener la lista de tareas al cargar
+                } catch (error) {
+                    console.error("Usuario rechazó la conexión", error);
+                }
+            } else {
+                alert("Por favor, instala MetaMask");
+            }
+        });
+
+        // funcion para crear una nueva tarea
+        async function crearTarea() {
+            const titulo = document.getElementById("titulo").value;
+            const descripcion = document.getElementById("descripcion").value;
+            if (!titulo || !descripcion) {
+                alert("Por favor, ingresa el título y la descripción de la tarea.");
+                return;
+            }
+            const accounts = await web3.eth.getAccounts();
+            try {
+                await contract.methods.crearTarea(titulo, descripcion).send({ from: accounts[0] });
+                alert("¡Tarea creada exitosamente!");
+                document.getElementById("titulo").value = "";
+                document.getElementById("descripcion").value = "";
+                obtenerTareas();
+            } catch (error) {
+                console.error("Error al crear la tarea:", error);
+            }
+        }
+
+        // función para completar una tarea
+        async function completarTarea(id) {
+            const accounts = await web3.eth.getAccounts();
+            try {
+                await contract.methods.completarTarea(id).send({ from: accounts[0] });
+                alert("¡Tarea marcada como completada!");
+                obtenerTareas();
+            } catch (error) {
+                console.error("Error al completar la tarea:", error);
+            }
+        }
+
+        // función para obtener la lista de tareas
+        async function obtenerTareas() {
+            const taskList = document.getElementById("taskList");
+            taskList.innerHTML = "";
+            try {
+                const contadorTareas = await contract.methods.contadorTareas().call();
+                for (let i = contadorTareas; i >= 1; i--) {
+                    const tarea = await contract.methods.obtenerTarea(i).call();
+                    // Crear elementos HTML para mostrar la tarea
+                    const taskDiv = document.createElement("div");
+                    taskDiv.className = "task";
+                    taskDiv.innerHTML = `
+                        <h3>${tarea[1]}</h3>
+                        <p>${tarea[2]}</p>
+                        <p><strong>Estado:</strong> <span class="status ${tarea[3] ? '' : 'pendiente'}">${tarea[3] ? 'Completada' : 'Pendiente'}</span></p>
+                        ${!tarea[3] && tarea[4].toLowerCase() === (await web3.eth.getAccounts())[0].toLowerCase() ? `<button class="complete-btn" onclick="completarTarea(${tarea[0]})">Marcar como Completada</button>` : ''}
+                    `;
+                    taskList.appendChild(taskDiv);
+                }
+            } catch (error) {
+                console.error("Error al obtener las tareas:", error);
+            }
+        }
+    </script>
+</body>
+</html>
